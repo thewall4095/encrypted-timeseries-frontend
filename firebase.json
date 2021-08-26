@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "public": "dist/encrypted-timeseries-frontend",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

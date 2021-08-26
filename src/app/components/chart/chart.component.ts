@@ -2,12 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { ApiService } from './../../services/api.service';
 import { ChartOptions, ChartType, ChartDataSets } from 'chart.js';
 import { Label } from 'ng2-charts';
+import { WebsocketService } from 'src/app/services/websocket.service';
 
 @Component({
   selector: 'app-chart',
   templateUrl: './chart.component.html',
   styleUrls: ['./chart.component.scss'],
-  providers: [ApiService]
+  providers: [ApiService, WebsocketService]
 })
 export class ChartComponent implements OnInit {
   chartData:any;
@@ -21,14 +22,21 @@ export class ChartComponent implements OnInit {
   public barChartPlugins = [];
 
   public barChartData: ChartDataSets[] = [
-    { data: [65, 59, 80, 81, 56, 55, 40], label: 'Series A' },
+    { data: [], label: 'Series A' },
   ];
-  constructor(private apiService: ApiService) { }
+  constructor(private apiService: ApiService, private websocketService: WebsocketService) {
+    this.websocketService.setupSocketConnection();
+    this.websocketService.eventCallback$.subscribe((data:any) => {
+      console.log(data);
+      this.barChartLabels.push(data?.ts);
+      this.barChartData[0].data?.push(data?.messagesCount)
+    });
+  }
 
   ngOnInit(): void {
     this.apiService.getTimeseriesData({}).subscribe((res:any) => {
       console.log(res);
-      if(res.data){
+      if(res.status){
         res.data.forEach((element:any) => {
           if(element?.messagesCount)
             this.barChartLabels.push(element.ts);
@@ -45,6 +53,10 @@ export class ChartComponent implements OnInit {
     });
 
 
+  }
+
+  ngOnDestroy(){
+    this.websocketService.disconnect();
   }
 
 }
